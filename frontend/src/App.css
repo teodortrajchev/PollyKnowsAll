@@ -1,0 +1,80 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg, #cfcfd6, #e6dbe9);
+}
+
+.container {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.bubble {
+  display: inline-block;
+  background: #eee;
+  padding: 15px 25px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: purple;
+  position: relative;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px;
+  border-style: solid;
+  border-color: #eee transparent transparent transparent;
+}
+
+.character {
+  width: 120px;
+  margin: 20px 0;
+}
+
+.input {
+  width: 300px;
+  padding: 12px;
+  border-radius: 25px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 10px rgba(150, 100, 255, 0.3);
+}
+
+.button {
+  display: block;
+  margin: 20px auto;
+  padding: 12px 30px;
+  border-radius: 25px;
+  border: none;
+  background: linear-gradient(90deg, #ffd200, #ff9f00);
+  color: purple;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+.dots span {
+  animation: blink 1.4s infinite;
+  font-size: 20px;
+  margin: 0 2px;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  20% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
