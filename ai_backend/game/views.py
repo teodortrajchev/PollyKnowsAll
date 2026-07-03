@@ -1,10 +1,17 @@
 import os
+import uuid
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 import json
 import random
 import google.genai as genai
+from dotenv import load_dotenv
+
+from .models import Word
+
+load_dotenv()
 
 
 client = genai.Client(api_key=os.getenv("API_KEY"))
@@ -38,41 +45,69 @@ def ask_gemini(secret, question):
 
 @csrf_exempt
 def start(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        session_id = body.get("session_id")
+    category = request.GET.get('category', None)
 
-        games[session_id] = random.choice(topics)
+    try:
+        words = Word.objects.all()
+        if category:
+            words = words.filter(category=category)
 
-        return JsonResponse({"message": "Game started"})
+        if not words.exists():
+            return JsonResponse({'error': f'No words found for category: {category}'}, status=404)
 
-    return JsonResponse({"error": "Only POST allowed"}, status=405)
+        word_obj = random.choice(list(words))
+        word = word_obj.word
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+    session_id = str(uuid.uuid4())
+    games[session_id] = {
+        "word": word,
+        "num_questions": 0,
+        "category": word_obj.category,
+    }
+
+    return JsonResponse({
+        "message": "Game started",
+        "session_id": session_id,
+        "category": word_obj.category,
+    })
+
+
+
 
 
 @csrf_exempt
 def ask(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    session_id = data.get('session_id')
+    question = data.get('question', '').strip()
+    if not session_id or not question:
+        return JsonResponse({'error': 'Missing session_id or question'}, status=400)
+    if session_id not in games:
+        return JsonResponse({'error': 'Game not found, start a new game'}, status=404)
+    game = games[session_id]
+    secret = game["word"]
+    game["num_questions"] += 1
 
-        session_id = body.get("session_id")
-        question = body.get("question")
-
-        secret = games.get(session_id)
-
-        if not secret:
-            return JsonResponse({"error": "Game not found"}, status=404)
-
-        if secret.lower() in question.lower():
-            del games[session_id]
-            return JsonResponse({
-                "answer": "🎉 ТОЧНО!",
-                "game_over": True
-            })
-
-        answer = ask_gemini(secret, question)
+    if secret.lower() in question.lower():
+        del games[session_id]
         return JsonResponse({
-            "answer": answer,
-            "game_over": False
+            'answer': '🎉 ТОЧНО! Победивте!',
+            'game_over': True,
+            'num_questions': game["num_questions"]
         })
-
-    return JsonResponse({"error": "Only POST allowed"}, status=405)
+    answer = ask_gemini(secret, question)
+    return JsonResponse({
+        'answer': answer,
+        'game_over': False,
+        'num_questions': game["num_questions"]
+    })
+def index(request):
+    return render(request, '../frontend/index.html')
