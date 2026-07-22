@@ -2,19 +2,22 @@ from django.contrib import admin
 
 from .models import *
 # Register your models here.
-#TODO Logika so inkrementiranje za prasanja,logika za profil i za igri
 
 
 class WordAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return request.user.is_superuser
 
-class GameAdmin(admin.ModelAdmin):
-    pass
-class QuestionAdmin(admin.ModelAdmin):
-    pass
+
 class UserProfileAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['user', 'num_games', 'wins',"coins", 'language']
+
+class GameAdmin(admin.ModelAdmin):
+    list_display = ['user', 'word', 'num_questions', 'start_time']
+
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ['question_text', 'answer', 'game', 'user']
+
 
 
 admin.site.register(Question, QuestionAdmin)

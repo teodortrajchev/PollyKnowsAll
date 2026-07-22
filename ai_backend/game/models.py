@@ -26,7 +26,6 @@ class GameSession(models.Model):
 
 class Question(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    word_id = models.ForeignKey(Word, on_delete=models.CASCADE)
     game = models.ForeignKey(GameSession, on_delete=models.CASCADE)
     question_text = models.TextField()
     answer = models.CharField(max_length=50, blank=True)
@@ -38,7 +37,15 @@ class UserProfile(models.Model):
     language = models.CharField(max_length=10, default='mk')
     created_at = models.DateTimeField(auto_now_add=True)
     num_games = models.IntegerField(default=0)
+    coins = models.IntegerField(default=0)
+    wins = models.IntegerField(default=0)
 
+    def winner(self):
+        self.wins += 1
+        self.save()
+    def add_coins(self, amount):
+        self.coins += amount
+        self.save()
     def increment_num_games(self):
         self.num_games += 1
         self.save()
